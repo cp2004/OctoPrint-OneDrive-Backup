@@ -9,32 +9,25 @@ class OneDriveBackupPlugin(
 
     # SettingsPlugin
     def get_settings_defaults(self):
-        return dict(
-            # put your plugin's default settings here
-        )
+        return {}
 
     # AssetPlugin
     def get_assets(self):
-        return dict(
-            js=["dist/onedrive_backup.js"],
-            css=["dist/onedrive_backup.css"],
-        )
+        return {"js": ["dist/onedrive_backup.js"], "css": ["dist/onedrive_backup.css"]}
 
     # Software Update hook
     def get_update_information(self):
-        return dict(
-            onedrive_backup=dict(
-                displayName="OneDrive Backup",
-                displayVersion=self._plugin_version,
-                # version check: github repository
-                type="github_release",
-                user="cp2004",
-                repo="OctoPrint-OneDrive-Backup",
-                current=self._plugin_version,
-                # update method: pip
-                pip="https://github.com/cp2004/OctoPrint-OneDrive-Backup/archive/{target_version}.zip",
-            )
-        )
+        return {
+            "onedrive_backup": {
+                "displayName": "OneDrive Backup",
+                "displayVersion": self._plugin_version,
+                "type": "github_release",
+                "user": "cp2004",
+                "repo": "OctoPrint-OneDrive-Backup",
+                "current": self._plugin_version,
+                "pip": "https://github.com/cp2004/OctoPrint-OneDrive-Backup/archive/{target_version}.zip",
+            }
+        }
 
 
 from ._version import get_versions

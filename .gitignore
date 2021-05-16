@@ -1,0 +1,12 @@
+*.pyc
+*.swp
+.idea
+*.iml
+build
+dist
+*.egg*
+.DS_Store
+*.zip
+
+secret
+node_modules

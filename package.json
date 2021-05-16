@@ -1,0 +1,53 @@
+{
+  "name": "octoprint-onedrive-backup",
+  "version": "1.0.0",
+  "description": "Automatically upload OctoPrint Backups to OneDrive",
+  "scripts": {
+    "start": "concurrently \"npm run dev\" \"npm run css-dev\"",
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development --watch",
+    "css-dev": "sass --watch octoprint_onedrive_backup/static/src/onedrive.scss octoprint_onedrive_backup/static/dist/onedrive_backup.css",
+    "css-build": "sass --style=compressed --no-source-map octoprint_onedrive_backup/static/src/onedrive.scss octoprint_onedrive_backup/static/dist/onedrive_backup.css",
+    "release": "concurrently \"npm run build\" \"npm run css-build\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cp2004/OctoPrint-WLED.git"
+  },
+  "keywords": [
+    "onedrive",
+    "octoprint"
+  ],
+  "author": "Charlie Powell",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/cp2004/OctoPrint-WLED/issues"
+  },
+  "homepage": "https://github.com/cp2004/OctoPrint-WLED#readme",
+  "devDependencies": {
+    "@babel/core": "^7.14.0",
+    "@babel/preset-env": "^7.14.1",
+    "babel-loader": "^8.2.2",
+    "concurrently": "^6.1.0",
+    "eslint": "^7.26.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "node-sass": "^6.0.0",
+    "sass": "^1.32.12",
+    "webpack": "^5.36.2",
+    "webpack-cli": "^4.7.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+include README.md
+recursive-include octoprint_onedrive_backup/templates *
+recursive-include octoprint_onedrive_backup/translations *
+recursive-include octoprint_onedrive_backup/static *
+include versioneer.py
+include octoprint_onedrive_backup/_version.py

@@ -1,11 +1,40 @@
+from typing import Optional
+
 import octoprint.plugin
+
+from .api import Commands, OneDriveBackupApi
+from .onedrive import OneDriveComm
 
 
 class OneDriveBackupPlugin(
     octoprint.plugin.SettingsPlugin,
     octoprint.plugin.AssetPlugin,
     octoprint.plugin.TemplatePlugin,
+    octoprint.plugin.SimpleApiPlugin,
 ):
+    def __init__(self):
+        super().__init__()
+        self.onedrive: Optional[OneDriveComm] = None
+        self.api: Optional[OneDriveBackupApi] = None
+
+    def initialize(self):
+        self.api = OneDriveBackupApi(self)
+        self.onedrive = OneDriveComm(self)
+
+    # SimpleApiPlugin
+    def on_api_get(self, request):
+        return self.api.on_api_get(request)
+
+    def on_api_command(self, command, data):
+        return self.api.on_api_command(command, data)
+
+    def get_api_commands(self):
+        return Commands.list_commands()
+
+    def send_message(self, msg_type: str, msg_content: dict):
+        self._plugin_manager.send_plugin_message(
+            "onedrive_backup", {"type": msg_type, "content": msg_content}
+        )
 
     # SettingsPlugin
     def get_settings_defaults(self):

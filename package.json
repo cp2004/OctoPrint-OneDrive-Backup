@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cp2004/OctoPrint-WLED.git"
+    "url": "git+https://github.com/cp2004/OctoPrint-OneDrive-Backup.git"
   },
   "keywords": [
     "onedrive",
@@ -21,18 +21,21 @@
   "author": "Charlie Powell",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/cp2004/OctoPrint-WLED/issues"
+    "url": "https://github.com/cp2004/OctoPrint-OneDrive-Backup/issues"
   },
-  "homepage": "https://github.com/cp2004/OctoPrint-WLED#readme",
+  "homepage": "https://github.com/cp2004/OctoPrint-OneDrive-Backup#readme",
   "devDependencies": {
     "@babel/core": "^7.14.0",
     "@babel/preset-env": "^7.14.1",
+    "@babel/preset-react": "^7.13.13",
     "babel-loader": "^8.2.2",
     "concurrently": "^6.1.0",
     "eslint": "^7.26.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-react": "^7.23.2",
+    "eslint-plugin-react-hooks": "^4.2.0",
     "node-sass": "^6.0.0",
     "sass": "^1.32.12",
     "webpack": "^5.36.2",
@@ -49,5 +52,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "main": "octoprint_onedrive_backup/static/src/onedrive.js"
 }

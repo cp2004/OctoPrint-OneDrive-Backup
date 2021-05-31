@@ -9,6 +9,7 @@ module.exports = {
     sourceType: "module"
   },
   rules: {
-    quotes: ["warn", "double"]
+    quotes: ["warn", "double"],
+    "react/prop-types": 0
   }
 }

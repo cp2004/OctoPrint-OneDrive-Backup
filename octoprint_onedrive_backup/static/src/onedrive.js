@@ -2,6 +2,7 @@ import * as React from "react"
 import ReactDom from "react-dom"
 
 import Footer from "./components/Footer"
+import FileBrowser from "./components/FileBrowser"
 
 const PLUGIN_ID = "onedrive_backup"
 const COMMANDS = {
@@ -34,8 +35,6 @@ function Settings () {
   })
 
   React.useEffect(() => {
-    // Register websocket handler
-
     const apiGet = () => {
       OctoPrint.simpleApiGet(PLUGIN_ID).done((data) => {
         setAccounts(data.accounts)
@@ -129,6 +128,10 @@ function Settings () {
         </p>
       </div>
       }
+
+      <hr />
+
+      <FileBrowser />
 
       <Footer />
     </>

@@ -5,11 +5,15 @@ from octoprint_onedrive_backup import onedrive
 
 class Commands:
     StartAuth = "startAuth"
+    GetFolders = "folders"
+    GetFoldersByID = "foldersById"
 
     @staticmethod
     def list_commands():
         return {
             Commands.StartAuth: [],
+            Commands.GetFolders: [],
+            Commands.GetFoldersByID: ["id"],
         }
 
 
@@ -42,3 +46,14 @@ class OneDriveBackupApi:
                 "url": url,
                 "code": code,
             }
+
+        if command == Commands.GetFolders:
+            folders = self.plugin.onedrive.list_folders()
+
+            return folders
+
+        if command == Commands.GetFoldersByID:
+            item_id = data.get("id")
+            folders = self.plugin.onedrive.list_folders(item_id)
+
+            return folders

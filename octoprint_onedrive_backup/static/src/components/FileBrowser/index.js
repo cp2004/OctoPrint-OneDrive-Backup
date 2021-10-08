@@ -1,10 +1,12 @@
 import * as React from "react"
+import { Alert } from "../bootstrap/"
 
 const OctoPrint = window.OctoPrint
 
 export default function FileBrowser (props) {
   const [loading, setLoading] = React.useState(false)
   const [initialLoad, setInitialLoad] = React.useState(true)
+  const [error, setError] = React.useState(false)
   const [folderData, setFolderData] = React.useState([])
   const [isRoot, setIsRoot] = React.useState(true)
   const [selectedFolder, setSelectedFolder] = React.useState("")
@@ -15,6 +17,9 @@ export default function FileBrowser (props) {
     setLoading(true)
 
     const processResponse = (response) => {
+      if (response.error) {
+        setError(true)
+      }
       setLoading(false)
       setInitialLoad(false)
       setFolderData(response.folders)
@@ -75,6 +80,10 @@ export default function FileBrowser (props) {
 
   return (
     <>
+      {error && <Alert variant={"error"}>
+        <i className={"fas fa-times text-error"} /><strong> Error:</strong>
+        {error}
+      </Alert>}
       {!initialLoad
         ? <table className={"table"}>
         <thead>

@@ -73,7 +73,7 @@ class OneDriveComm:
 
         folders = []
         data = self._get_graph(f"/me/drive/{location}/children", "")
-        if data:
+        if data and "error" not in data:
             value = data["value"]
             for item in value:
                 if "folder" in item:
@@ -85,6 +85,8 @@ class OneDriveComm:
                             "childCount": item["folder"]["childCount"],
                         }
                     )
+        else:
+            return {"error": True}
         return {"root": True if item_id is None else False, "folders": folders}
 
     def _get_headers(self):
@@ -119,19 +121,22 @@ class OneDriveComm:
 
                     if "error" in response_json:
                         # In theory this should not happen, since we check the status code,  but if it does
-                        raise GraphError("Graph reported an error")
+                        raise GraphError(f"Graph reported an error: {response_json}")
 
                     return response_json
 
                 else:
-                    raise GraphError("Error connecting to Microsoft Graph")
+                    raise GraphError(
+                        f"Error connecting to Microsoft Graph, status: "
+                        f"{response.status_code}, content: {response.text}"
+                    )
 
         except requests.RequestException as e:
             self._logger.exception(e)
         except GraphError as e:
             self._logger.exception(e)
 
-        return {}
+        return {"error": True}
 
 
 class AuthInProgressError(Exception):

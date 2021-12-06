@@ -83,6 +83,9 @@ class OneDriveComm:
                             "id": item["id"],
                             "parent": item["parentReference"]["id"],
                             "childCount": item["folder"]["childCount"],
+                            "path": item["parentReference"]["path"].split("/root:")[1]
+                            + "/"
+                            + item["name"],  # Human readable path
                         }
                     )
         else:
@@ -95,7 +98,7 @@ class OneDriveComm:
         )  # TODO select active account
 
         if token is None:
-            # Auth failed, do something about it
+            # Auth failed, do something about it TODO - when requested too fast, this seems to fail sometimes.
             return {}
 
         return {"Authorization": f"Bearer {token['access_token']}"}

@@ -38,7 +38,12 @@ class OneDriveBackupPlugin(
 
     # SettingsPlugin
     def get_settings_defaults(self):
-        return {}
+        """
+        Quite basic settings as the authentication tokens are stored separately, outside config.yaml.
+        """
+        return {
+            "folder": {"id": "", "path": ""},
+        }
 
     # AssetPlugin
     def get_assets(self):

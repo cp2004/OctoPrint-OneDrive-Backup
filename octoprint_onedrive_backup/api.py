@@ -7,6 +7,7 @@ class Commands:
     StartAuth = "startAuth"
     GetFolders = "folders"
     GetFoldersByID = "foldersById"
+    SetFolder = "setFolder"
 
     @staticmethod
     def list_commands():
@@ -14,6 +15,7 @@ class Commands:
             Commands.StartAuth: [],
             Commands.GetFolders: [],
             Commands.GetFoldersByID: ["id"],
+            Commands.SetFolder: ["id", "path"],
         }
 
 
@@ -26,6 +28,7 @@ class OneDriveBackupApi:
         return {
             "accounts": self.plugin.onedrive.list_accounts(),
             "flow": self.plugin.onedrive.flow_in_progress,
+            "folder": self.plugin._settings.get(["folder"], merged=True),
         }
 
     def on_api_command(self, command, data):
@@ -57,3 +60,12 @@ class OneDriveBackupApi:
             folders = self.plugin.onedrive.list_folders(item_id)
 
             return folders
+
+        if command == Commands.SetFolder:
+            folder_id = data.get("id")
+            folder_path = data.get("path")
+
+            self.plugin._settings.set(["folder", "id"], folder_id)
+            self.plugin._settings.set(["folder", "path"], folder_path)
+
+            self.plugin._settings.save()

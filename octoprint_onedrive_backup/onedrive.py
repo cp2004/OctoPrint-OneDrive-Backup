@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+import urllib.parse
 from typing import Optional
 
 import requests
@@ -92,7 +93,109 @@ class OneDriveComm:
             return {"error": True}
         return {"root": True if item_id is None else False, "folders": folders}
 
-    def _get_headers(self):
+    def upload_file(self, file_name, file_path):
+        # https://docs.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0
+
+        self._logger.info(f"Beginning OneDrive file upload for {file_name}")
+
+        # Get file details
+        if not os.path.exists(file_path):
+            self._logger.error(f"File {file_path} does not exist")
+            # Abort
+            return
+
+        file_size = os.path.getsize(file_path)
+
+        upload_id = self.plugin._settings.get(["folder", "id"])
+
+        self._logger.debug("Creating upload session")
+
+        # Create upload session
+        data = {
+            "item": {
+                "@microsoft.graph.conflictBehavior": "rename",
+                "name": file_name,
+                "fileSize": file_size,
+            }
+        }
+
+        upload_session = self._post_graph(
+            f"/me/drive/items/{upload_id}:/{urllib.parse.quote(file_name)}:/createUploadSession",
+            data=data,
+        )
+
+        if (
+            upload_session
+            and "error" in upload_session
+            or "uploadUrl" not in upload_session
+        ):
+            self._logger.error(
+                f"Error creating upload session: {upload_session['error']}"
+            )
+            return
+
+        # Upload URLs will expire in several days, but that shouldn't be a problem for us
+        upload_url = upload_session["uploadUrl"]
+
+        # Maximum bytes in any one request is 60MiB. So we need to chunk the file, which must be
+        # a multiple of 320KiB. See docs. Recommended 5-10MB chunks.
+        chunk_size = 1024 * 320 * 16  # 5MB
+        number_of_uploads = -(-file_size // chunk_size)
+        self._logger.debug(
+            f"chunk size: {chunk_size}, file size: {file_size}, number of uploads: {number_of_uploads}"
+        )
+
+        self._logger.info("Uploading file to OneDrive")
+
+        try:
+            self._logger.debug("Loading file")
+
+            i = 0
+            with open(file_path, "rb") as f:
+                while f.tell() < file_size:
+                    i += 1
+
+                    content_range_start = f.tell()
+                    content_range_end = f.tell() + chunk_size - 1
+
+                    # Last chunk is capped of course
+                    if (file_size - f.tell()) < chunk_size:
+                        content_range_end = file_size - 1
+
+                    self._logger.debug(f"Uploading chunk {i} of {number_of_uploads}")
+                    self._logger.debug(
+                        f"content_range_start: {content_range_start}, content_range_end: {content_range_end}"
+                    )
+
+                    chunk = f.read(chunk_size)
+
+                    # This was the site of 3 days of pain
+                    headers = self._get_headers()
+                    headers.update(
+                        {
+                            "Content-range": f"bytes {content_range_start}-{content_range_end}/{file_size}"
+                        }
+                    )
+
+                    response = requests.put(
+                        upload_url,
+                        data=chunk,
+                        headers=headers,
+                        timeout=30,
+                    )
+
+                    self._validate_response(response)
+
+                    self._logger.debug(f"Chunk {i} upload complete")
+
+        except Exception as e:
+            self._logger.error(f"Error uploading file: {e}")
+            return
+
+        # If we got this far... Everything worked?
+        self._logger.info("Upload complete")
+
+    def _get_headers(self) -> dict:
         token = self.client.acquire_token_silent(
             scopes=SCOPES, account=self.client.get_accounts()[0]
         )  # TODO select active account
@@ -115,24 +218,7 @@ class OneDriveComm:
                 headers=self._get_headers(),
                 timeout=REQUEST_TIMEOUT,
             ) as response:
-                if 200 <= response.status_code < 210:
-                    # Valid response, proceed
-                    try:
-                        response_json = response.json()
-                    except ValueError:
-                        raise GraphError("Invalid response recieved")
-
-                    if "error" in response_json:
-                        # In theory this should not happen, since we check the status code,  but if it does
-                        raise GraphError(f"Graph reported an error: {response_json}")
-
-                    return response_json
-
-                else:
-                    raise GraphError(
-                        f"Error connecting to Microsoft Graph, status: "
-                        f"{response.status_code}, content: {response.text}"
-                    )
+                return self._validate_response(response)
 
         except requests.RequestException as e:
             self._logger.exception(e)
@@ -140,6 +226,48 @@ class OneDriveComm:
             self._logger.exception(e)
 
         return {"error": True}
+
+    def _post_graph(self, endpoint, data) -> dict:
+        if not endpoint[:1] == "/":
+            endpoint = f"/{endpoint}"
+
+        # GitHub Copilot wrote this, double check everything!
+        try:
+            with requests.request(
+                "POST",
+                f"{GRAPH_URL}{endpoint}",
+                json=data,
+                headers=self._get_headers(),
+                timeout=REQUEST_TIMEOUT,
+            ) as response:
+                return self._validate_response(response)
+
+        except requests.RequestException as e:
+            self._logger.exception(e)
+        except GraphError as e:
+            self._logger.exception(e)
+
+        return {"error": True}
+
+    def _validate_response(self, response) -> dict:
+        if 200 <= response.status_code < 210:
+            # Valid response, proceed
+            try:
+                response_json = response.json()
+            except ValueError:
+                raise GraphError("Invalid response recieved")
+
+            if "error" in response_json:
+                # In theory this should not happen, since we check the status code,  but if it does
+                raise GraphError(f"Graph reported an error: {response_json}")
+
+            return response_json
+
+        else:
+            raise GraphError(
+                f"Error connecting to Microsoft Graph, status: "
+                f"{response.status_code}, content: {response.text}"
+            )
 
 
 class AuthInProgressError(Exception):

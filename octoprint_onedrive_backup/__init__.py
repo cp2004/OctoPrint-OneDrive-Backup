@@ -1,3 +1,4 @@
+import threading
 from typing import Optional
 
 import octoprint.plugin
@@ -11,6 +12,7 @@ class OneDriveBackupPlugin(
     octoprint.plugin.AssetPlugin,
     octoprint.plugin.TemplatePlugin,
     octoprint.plugin.SimpleApiPlugin,
+    octoprint.plugin.EventHandlerPlugin,
 ):
     def __init__(self):
         super().__init__()
@@ -35,6 +37,15 @@ class OneDriveBackupPlugin(
         self._plugin_manager.send_plugin_message(
             "onedrive_backup", {"type": msg_type, "content": msg_content}
         )
+
+    def on_event(self, event, payload):
+        if event == "plugin_backup_backup_created":
+            t = threading.Thread(
+                target=self.onedrive.upload_file,
+                args=(payload["name"], payload["path"]),
+            )
+            t.daemon = True
+            t.start()
 
     # SettingsPlugin
     def get_settings_defaults(self):

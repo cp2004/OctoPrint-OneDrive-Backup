@@ -1,0 +1,55 @@
+exclude: ^(translations/|.*\.css|.*\.svg|versioneer.py|octoprint_onedrive_backup/_version.py|node_modules|octoprint_onedrive_backup/static/dist)
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: fix-encoding-pragma
+        args: ["--remove"]
+  - repo: https://github.com/OctoPrint/codemods
+    rev: 0.5.0
+    hooks:
+      - id: codemod_dict_to_literal
+        stages: ["manual"]
+      - id: codemod_set_to_literal
+        stages: ["manual"]
+      - id: codemod_not_in
+        stages: ["manual"]
+      - id: codemod_detect_past_builtins_imports
+      - id: codemod_remove_float_conversion
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.7.0
+    hooks:
+      - id: isort
+        args: ["--profile", "black", "--filter-files"]
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.4
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-bugbear
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v7.23.0
+    hooks:
+      - id: eslint
+        additional_dependencies:
+          - eslint@7.24.0
+          - eslint-config-standard@16.0.2
+          - eslint-plugin-import@2.22.1
+          - eslint-plugin-node@11.1.0
+          - eslint-plugin-promise@4.3.1
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.10.0
+    hooks:
+      - id: pyupgrade
+        args: ["--py36-plus"]

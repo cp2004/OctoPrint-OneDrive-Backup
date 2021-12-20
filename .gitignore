@@ -1,0 +1,6 @@
+node_modules
+secret
+.idea
+dist
+*.egg-info
+*.pyc

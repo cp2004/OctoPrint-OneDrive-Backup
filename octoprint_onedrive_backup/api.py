@@ -8,6 +8,7 @@ class Commands:
     GetFolders = "folders"
     GetFoldersByID = "foldersById"
     SetFolder = "setFolder"
+    Forget = "forget"
 
     @staticmethod
     def list_commands():
@@ -16,6 +17,7 @@ class Commands:
             Commands.GetFolders: [],
             Commands.GetFoldersByID: ["id"],
             Commands.SetFolder: ["id", "path"],
+            Commands.Forget: [],
         }
 
 
@@ -69,3 +71,6 @@ class OneDriveBackupApi:
             self.plugin._settings.set(["folder", "path"], folder_path)
 
             self.plugin._settings.save()
+
+        if command == Commands.Forget:
+            self.plugin.onedrive.forget_account()

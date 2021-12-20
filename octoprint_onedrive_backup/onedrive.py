@@ -10,18 +10,18 @@ from msal import PublicClientApplication, SerializableTokenCache
 import octoprint_onedrive_backup
 
 # MSAL/Graph config
-APPLICATION_ID = "1fbab959-f7f1-43c4-a800-5f7f58eb068f"
+APPLICATION_ID = "1fbab959-f7f1-43c4-a800-5f7f58eb068f"  # Not a secret :)
 GRAPH_URL = "https://graph.microsoft.com/v1.0"
-# TODO way to change scopes and prompt re-auth
+
+# WHEN CHANGING SCOPES we will need to think of a way to re-auth, hopefully this isn't needed...
 SCOPES = [
     "User.ReadBasic.All",
     "Files.ReadWrite",
 ]
-
-# Other config
 REQUEST_TIMEOUT = 2  # Seconds
 
 
+# Built on the assumption we will only ever have one account logged in at a time
 class OneDriveComm:
     def __init__(self, plugin):
         self.plugin = plugin  # type: octoprint_onedrive_backup.OneDriveBackupPlugin
@@ -45,8 +45,13 @@ class OneDriveComm:
         self.token_result: Optional[dict] = None
 
     def begin_auth_flow(self) -> dict:
-        if self.auth_poll_thread is None:
+        if self.auth_poll_thread is None or not self.auth_poll_thread.is_alive():
+            # Remove any accounts before adding a new one
+            self.forget_account()
+
+            # Begin auth flow
             self.flow_in_progress = self.client.initiate_device_flow(scopes=SCOPES)
+            # Thread to poll graph for auth result
             self.auth_poll_thread = threading.Thread(
                 target=self.acquire_token,
                 kwargs={"flow": self.flow_in_progress},
@@ -66,7 +71,16 @@ class OneDriveComm:
     def list_accounts(self):
         return [account["username"] for account in self.client.get_accounts()]
 
+    def forget_account(self):
+        if len(self.client.get_accounts()):
+            # Assuming that we never get more than one account
+            self.client.remove_account(self.client.get_accounts()[0])
+
     def list_folders(self, item_id=None):
+        if not len(self.client.get_accounts()):
+            self._logger.error("No accounts registered, can't list folders")
+            return {"error": True}
+
         if item_id is None:
             location = "root"
         else:
@@ -96,21 +110,25 @@ class OneDriveComm:
     def upload_file(self, file_name, file_path):
         # https://docs.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0
 
-        self._logger.info(f"Beginning OneDrive file upload for {file_name}")
+        if not len(self.client.get_accounts()):
+            self._logger.error("No accounts registered, can't upload file")
+            return
+
+        self._logger.info(f"Starting upload session for {file_name}")
+
+        upload_location_id = self.plugin._settings.get(["folder", "id"])
+        if not upload_location_id:  # Not configured
+            self._logger.error("Upload location not configured")
+            return
 
         # Get file details
         if not os.path.exists(file_path):
             self._logger.error(f"File {file_path} does not exist")
             # Abort
             return
-
         file_size = os.path.getsize(file_path)
 
-        upload_id = self.plugin._settings.get(["folder", "id"])
-
         self._logger.debug("Creating upload session")
-
-        # Create upload session
         data = {
             "item": {
                 "@microsoft.graph.conflictBehavior": "rename",
@@ -118,9 +136,8 @@ class OneDriveComm:
                 "fileSize": file_size,
             }
         }
-
         upload_session = self._post_graph(
-            f"/me/drive/items/{upload_id}:/{urllib.parse.quote(file_name)}:/createUploadSession",
+            f"/me/drive/items/{upload_location_id}:/{urllib.parse.quote(file_name)}:/createUploadSession",
             data=data,
         )
 
@@ -145,7 +162,7 @@ class OneDriveComm:
             f"chunk size: {chunk_size}, file size: {file_size}, number of uploads: {number_of_uploads}"
         )
 
-        self._logger.info("Uploading file to OneDrive")
+        self._logger.info("Uploading file to OneDrive...")
 
         try:
             self._logger.debug("Loading file")
@@ -156,7 +173,9 @@ class OneDriveComm:
                     i += 1
 
                     content_range_start = f.tell()
-                    content_range_end = f.tell() + chunk_size - 1
+                    content_range_end = (
+                        f.tell() + chunk_size - 1
+                    )  # -1 because f.tell() is 0-indexed
 
                     # Last chunk is capped of course
                     if (file_size - f.tell()) < chunk_size:
@@ -184,6 +203,7 @@ class OneDriveComm:
                         timeout=30,
                     )
 
+                    # Will raise an exception if the response was bad
                     self._validate_response(response)
 
                     self._logger.debug(f"Chunk {i} upload complete")
@@ -196,12 +216,13 @@ class OneDriveComm:
         self._logger.info("Upload complete")
 
     def _get_headers(self) -> dict:
+        # TODO sometimes this fails when requested too fast?
         token = self.client.acquire_token_silent(
             scopes=SCOPES, account=self.client.get_accounts()[0]
-        )  # TODO select active account
+        )
 
         if token is None:
-            # Auth failed, do something about it TODO - when requested too fast, this seems to fail sometimes.
+            # Auth failed, TODO do something about it
             return {}
 
         return {"Authorization": f"Bearer {token['access_token']}"}

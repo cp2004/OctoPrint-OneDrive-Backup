@@ -42,10 +42,27 @@ class OneDriveBackupPlugin(
         if event == "plugin_backup_backup_created":
             t = threading.Thread(
                 target=self.onedrive.upload_file,
-                args=(payload["name"], payload["path"]),
+                args=(
+                    payload["name"],
+                    payload["path"],
+                    self.on_upload_progress,
+                    self.on_upload_complete,
+                    self.on_upload_error,
+                ),
             )
             t.daemon = True
             t.start()
+
+    def on_upload_progress(self, progress):
+        # Called by the onedrive client for every chunk uploaded
+        self.send_message("upload_progress", {"progress": progress})
+
+    def on_upload_error(self, error):
+        # If the upload fails, this will be called so we can notify the user
+        self.send_message("upload_error", {"error": error})
+
+    def on_upload_complete(self):
+        self.send_message("upload_complete", {})
 
     # SettingsPlugin
     def get_settings_defaults(self):

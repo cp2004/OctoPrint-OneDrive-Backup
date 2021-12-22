@@ -107,12 +107,28 @@ class OneDriveComm:
             return {"error": True}
         return {"root": True if item_id is None else False, "folders": folders}
 
-    def upload_file(self, file_name, file_path):
+    def upload_file(
+        self,
+        file_name,
+        file_path,
+        on_progress_update=lambda x: None,
+        on_upload_complete=lambda: None,
+        on_error=lambda x: None,
+    ):
         # https://docs.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0
 
         if not len(self.client.get_accounts()):
             self._logger.error("No accounts registered, can't upload file")
             return
+
+        if not callable(on_progress_update):
+            raise TypeError("on_progress_update must be callable")
+
+        if not callable(on_upload_complete):
+            raise TypeError("on_upload_complete must be callable")
+
+        if not callable(on_error):
+            raise TypeError("on_error must be callable")
 
         self._logger.info(f"Starting upload session for {file_name}")
 
@@ -185,6 +201,8 @@ class OneDriveComm:
                     self._logger.debug(
                         f"content_range_start: {content_range_start}, content_range_end: {content_range_end}"
                     )
+                    # Notify of upload progress, as integer percentage
+                    on_progress_update((100 * i) // number_of_uploads)
 
                     chunk = f.read(chunk_size)
 
@@ -210,10 +228,12 @@ class OneDriveComm:
 
         except Exception as e:
             self._logger.error(f"Error uploading file: {e}")
+            on_error(repr(e))
             return
 
         # If we got this far... Everything worked?
         self._logger.info("Upload complete")
+        on_upload_complete()
 
     def _get_headers(self) -> dict:
         # TODO sometimes this fails when requested too fast?

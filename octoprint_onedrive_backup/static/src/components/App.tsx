@@ -1,5 +1,6 @@
 import * as React from "react"
 
+import ErrorBoundary from "./ErrorBoundary"
 import FileBrowser from "./FileBrowser"
 import Footer from "./Footer"
 import {QueryClient, QueryClientProvider} from "react-query";
@@ -23,15 +24,33 @@ const queryClient = new QueryClient({
 
 export default function Index() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <ReactQueryDevtools initialIsOpen={false}/>
-            <App />
-        </QueryClientProvider>
+        <ErrorBoundary onError={OnError} >
+            <QueryClientProvider client={queryClient}>
+                <ReactQueryDevtools initialIsOpen={false}/>
+                <App />
+            </QueryClientProvider>
+        </ErrorBoundary>
+    )
+}
+
+function OnError () {
+    return (
+        <>
+            <h2 className={"text-error"}>
+                There was an error rendering the UI.
+            </h2>
+            <p>
+                {"Please "}
+                <a href={"https://github.com/cp2004/OctoPrint-NextGen-UI/issues/new/choose"} target={"_blank"}>
+                    report this error
+                </a>
+                , including the full JavaScript console contents in the report.
+            </p>
+        </>
     )
 }
 
 function App () {
-    // TODO error boundary
     // Store reference to notification so we can update it
     const [progressNotification, setProgressNotification] = React.useState<any>(null)
 

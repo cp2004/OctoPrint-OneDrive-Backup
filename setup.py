@@ -43,7 +43,12 @@ plugin_url = "https://github.com/cp2004/OneDrive-Backup"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["msal"]
+plugin_requires = [
+    "msal>=1.16.0, <2.0.0",
+    "cryptography<=36.0.0",  # https://www.piwheels.org/project/cryptography/ wheel was built for 36.0.0, but not 36.0.1
+    # Should be able to remove this bound when the build issue is fixed.
+    # See https://github.com/piwheels/packages/issues/264 for updates.
+]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point

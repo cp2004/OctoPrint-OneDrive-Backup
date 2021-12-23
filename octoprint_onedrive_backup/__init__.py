@@ -91,6 +91,13 @@ class OneDriveBackupPlugin(
             }
         }
 
+    def backup_excludes_hook(self, *args, **kwargs):
+        """
+        Excluding the MS Graph API token from the backup. Unnecessary security risk, if someone was to share
+        the backup it could partly compromise their MS account.
+        """
+        return ["cache.bin"]
+
 
 from ._version import get_versions
 
@@ -105,5 +112,6 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+        "octoprint.plugin.backup.additional_excludes": __plugin_implementation__.backup_excludes_hook,
     }

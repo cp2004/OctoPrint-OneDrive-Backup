@@ -7,6 +7,7 @@ import {QueryClient, QueryClientProvider} from "react-query";
 import { ReactQueryDevtools } from 'react-query/devtools'
 import Auth from "./Auth";
 import useSocket from "../hooks/useSocket";
+import SecurityWarning from "./Security";
 
 // @ts-ignore:next-line
 const Pnotify = window.PNotify
@@ -114,6 +115,8 @@ function App () {
             <hr />
 
             <FileBrowser />
+
+            <SecurityWarning />
 
             <Footer />
         </>

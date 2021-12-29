@@ -348,3 +348,11 @@ class PersistentTokenStore(SerializableTokenCache):
         if os.path.exists(self.path):
             with open(self.path, encoding="utf-8") as file:
                 self.deserialize(file.read())
+
+    def add(self, event, **kwargs):
+        super().add(event, **kwargs)
+        self.save()
+
+    def modify(self, credential_type, old_entry, new_key_value_pairs=None):
+        super().modify(credential_type, old_entry, new_key_value_pairs)
+        self.save()

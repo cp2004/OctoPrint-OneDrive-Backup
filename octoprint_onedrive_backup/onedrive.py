@@ -18,7 +18,8 @@ SCOPES = [
     "User.ReadBasic.All",
     "Files.ReadWrite",
 ]
-REQUEST_TIMEOUT = 2  # Seconds
+REQUEST_TIMEOUT = 5  # Seconds
+UNKNOWN_ERROR = "Unknown error, check octoprint.log for details"
 
 
 # Built on the assumption we will only ever have one account logged in at a time
@@ -42,7 +43,6 @@ class OneDriveComm:
 
         self.auth_poll_thread: Optional[threading.Thread] = None
         self.flow_in_progress: Optional[dict] = None
-        self.token_result: Optional[dict] = None
 
     def begin_auth_flow(self) -> dict:
         if self.auth_poll_thread is None or not self.auth_poll_thread.is_alive():
@@ -62,9 +62,8 @@ class OneDriveComm:
             raise AuthInProgressError("Auth flow is already in progress")
 
     def acquire_token(self, flow: dict) -> None:
-        result = self.client.acquire_token_by_device_flow(flow)
+        self.client.acquire_token_by_device_flow(flow)
         self.cache.save()
-        self.token_result = result
         self.plugin.send_message("auth_done", {})
         self.flow_in_progress = None
 
@@ -79,7 +78,7 @@ class OneDriveComm:
     def list_folders(self, item_id=None):
         if not len(self.client.get_accounts()):
             self._logger.error("No accounts registered, can't list folders")
-            return {"error": True}
+            return {"error": {"message": "No accounts registered"}}
 
         if item_id is None:
             location = "root"
@@ -87,8 +86,11 @@ class OneDriveComm:
             location = f"items/{item_id}"
 
         folders = []
-        data = self._get_graph(f"/me/drive/{location}/children", "")
-        if data and "error" not in data:
+        data = self._graph_request(f"/me/drive/{location}/children", select="")
+        if "error" in data:
+            return {"error": data["error"]}  # No extra fields slipping in
+
+        else:
             value = data["value"]
             for item in value:
                 if "folder" in item:
@@ -103,8 +105,7 @@ class OneDriveComm:
                             + item["name"],  # Human readable path
                         }
                     )
-        else:
-            return {"error": True}
+
         return {"root": True if item_id is None else False, "folders": folders}
 
     def upload_file(
@@ -152,8 +153,9 @@ class OneDriveComm:
                 "fileSize": file_size,
             }
         }
-        upload_session = self._post_graph(
+        upload_session = self._graph_request(
             f"/me/drive/items/{upload_location_id}:/{urllib.parse.quote(file_name)}:/createUploadSession",
+            method="POST",
             data=data,
         )
 
@@ -214,15 +216,20 @@ class OneDriveComm:
                         }
                     )
 
-                    response = requests.put(
+                    response = self._graph_request(
                         upload_url,
+                        method="PUT",
                         data=chunk,
                         headers=headers,
-                        timeout=30,
+                        timeout=60,  # Longer timeout than default as we are uploading larger things
                     )
 
-                    # Will raise an exception if the response was bad
-                    self._validate_response(response)
+                    if "error" in response:
+                        self._logger.error(
+                            f"Error uploading chunk {i}: {response['error']}"
+                        )
+                        on_error(response["error"])
+                        return
 
                     self._logger.debug(f"Chunk {i} upload complete")
 
@@ -237,87 +244,84 @@ class OneDriveComm:
 
     def _get_headers(self) -> dict:
         # TODO sometimes this fails when requested too fast?
-        token = self.client.acquire_token_silent(
+        # token = self.client.acquire_token_silent(
+        #     scopes=SCOPES, account=self.client.get_accounts()[0]
+        # )
+
+        token = self.client.acquire_token_silent_with_error(
             scopes=SCOPES, account=self.client.get_accounts()[0]
         )
 
+        if "error" in token:
+            self._logger.error("Error getting token: " + token["error"])
+            return {}  # Will end up with empty token error later
+
         if token is None:
-            # Auth failed, TODO do something about it
-            return {}
+            self._logger.error(
+                "No token available in cache to use"
+            )  # Probably no account logged in
+            return {}  # Will end up with empty token error later
 
         return {"Authorization": f"Bearer {token['access_token']}"}
 
-    def _get_graph(self, endpoint, select=None):
+    def _graph_request(
+        self,
+        endpoint,
+        method="GET",
+        select=None,
+        data=None,
+        timeout=REQUEST_TIMEOUT,
+        headers=None,
+    ) -> dict:
         if not endpoint[:1] == "/":
             endpoint = f"/{endpoint}"
 
+        url = f"{GRAPH_URL}{endpoint}"
+
+        select = {"$select": select} if select is not None else None
+
+        headers = headers if headers is not None else self._get_headers()
+
+        # Catch-all in case of internet problems
         try:
-            with requests.request(
-                "GET",
-                f"{GRAPH_URL}{endpoint}",
-                params={"$select": select} if select else None,
-                headers=self._get_headers(),
-                timeout=REQUEST_TIMEOUT,
-            ) as response:
-                return self._validate_response(response)
-
-        except requests.RequestException as e:
-            self._logger.exception(e)
-        except GraphError as e:
-            self._logger.exception(e)
-
-        return {"error": True}
-
-    def _post_graph(self, endpoint, data) -> dict:
-        if not endpoint[:1] == "/":
-            endpoint = f"/{endpoint}"
-
-        # GitHub Copilot wrote this, double check everything!
-        try:
-            with requests.request(
-                "POST",
-                f"{GRAPH_URL}{endpoint}",
-                json=data,
-                headers=self._get_headers(),
-                timeout=REQUEST_TIMEOUT,
-            ) as response:
-                return self._validate_response(response)
-
-        except requests.RequestException as e:
-            self._logger.exception(e)
-        except GraphError as e:
-            self._logger.exception(e)
-
-        return {"error": True}
-
-    def _validate_response(self, response) -> dict:
-        if 200 <= response.status_code < 210:
-            # Valid response, proceed
-            try:
-                response_json = response.json()
-            except ValueError:
-                raise GraphError("Invalid response recieved")
-
-            if "error" in response_json:
-                # In theory this should not happen, since we check the status code,  but if it does
-                raise GraphError(f"Graph reported an error: {response_json}")
-
-            return response_json
-
-        else:
-            raise GraphError(
-                f"Error connecting to Microsoft Graph, status: "
-                f"{response.status_code}, content: {response.text}"
+            response = requests.request(
+                method,
+                url,
+                params=select,
+                data=data,
+                headers=headers,
+                timeout=timeout,
             )
+
+        except Exception as e:
+            self._logger.exception(e)
+            return {"error": UNKNOWN_ERROR}
+
+        try:
+            # Check status code - all errors will have an error code outside of 2xx-3xx
+            response.raise_for_status()
+
+        except requests.RequestException as e:
+            self._logger.exception(e)
+            # Try and get the error message out of MS graph response - all 'successful' network requests
+            # should (by protocol) have a useful error message, but if not, return a generic error
+            try:
+                data = response.json()
+                if "error" in data:
+                    return {"error": data["error"]}
+            except Exception as e:
+                self._logger.exception(e)
+                return {"error": UNKNOWN_ERROR}
+
+        # Finally, try return a json response
+        try:
+            return response.json()
+        except Exception as e:
+            self._logger.exception(e)
+            return {"error": UNKNOWN_ERROR}
 
 
 class AuthInProgressError(Exception):
-    pass
-
-
-class GraphError(Exception):
-    """Base class for MS Graph related exceptions"""
-
     pass
 
 

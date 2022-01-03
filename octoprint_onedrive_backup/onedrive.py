@@ -342,17 +342,30 @@ class PersistentTokenStore(SerializableTokenCache):
     def __init__(self, path):
         super().__init__()
         self.path = path
+        self._logger = logging.getLogger(
+            "octoprint.plugins.onedrive_backup.token_cache"
+        )
 
     def save(self) -> None:
         """Serialize the current cache state into a string."""
         if self.has_state_changed:
-            with open(self.path, "wt", encoding="utf-8") as file:
-                file.write(self.serialize())
+            try:
+                with open(self.path, "wt", encoding="utf-8") as file:
+                    file.write(self.serialize())
+            except Exception as e:
+                self._logger.error("Failed to write token cache")
+                self._logger.exception(e)
 
     def load(self) -> None:
         if os.path.exists(self.path):
-            with open(self.path, encoding="utf-8") as file:
-                self.deserialize(file.read())
+            try:
+                with open(self.path, encoding="utf-8") as file:
+                    self.deserialize(file.read())
+            except Exception as e:
+                self._logger.error("Failed to read token cache")
+                self._logger.exception(e)
+                # Just load empty cache
+                self.deserialize("{}")
 
     def add(self, event, **kwargs):
         super().add(event, **kwargs)

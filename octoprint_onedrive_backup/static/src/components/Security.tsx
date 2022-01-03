@@ -6,7 +6,7 @@ export default function SecurityWarning () {
             <p>
                 Please be aware that this plugin stores its tokens for accessing your Microsoft account in OctoPrint's
                 configuration folder. As a result, if your OctoPrint install (or the server it is running on) is
-                compromised, your Microsoft account tokens will be compromised as well.
+                compromised, your files in OneDrive are at risk.
             </p>
             <p>
                 <strong>

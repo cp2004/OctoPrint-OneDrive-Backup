@@ -1,3 +1,5 @@
+import base64
+import hashlib
 import logging
 import os
 import threading
@@ -5,6 +7,7 @@ import urllib.parse
 from typing import Optional
 
 import requests
+from cryptography.fernet import Fernet, InvalidToken
 from msal import PublicClientApplication, SerializableTokenCache
 
 import octoprint_onedrive_backup
@@ -21,6 +24,7 @@ SCOPES = [
 ]
 REQUEST_TIMEOUT = 5  # Seconds
 UNKNOWN_ERROR = "Unknown error, check octoprint.log for details"
+ENCRYPT_CACHE = True
 
 
 # Built on the assumption we will only ever have one account logged in at a time
@@ -32,7 +36,8 @@ class OneDriveComm:
         )
 
         self.cache = PersistentTokenStore(
-            os.path.join(self.plugin.get_plugin_data_folder(), "cache.bin")
+            os.path.join(self.plugin.get_plugin_data_folder(), "cache.bin"),
+            self.plugin._settings.global_get(["server", "secretKey"]),
         )
         self.cache.load()
 
@@ -339,19 +344,23 @@ class PersistentTokenStore(SerializableTokenCache):
             )
     """
 
-    def __init__(self, path):
+    def __init__(self, path, secret_key):
         super().__init__()
         self.path = path
         self._logger = logging.getLogger(
             "octoprint.plugins.onedrive_backup.token_cache"
         )
+        if not isinstance(secret_key, str):
+            raise TypeError("secret_key must be a string")
+
+        self.secret_key = secret_key
 
     def save(self) -> None:
         """Serialize the current cache state into a string."""
         if self.has_state_changed:
             try:
-                with open(self.path, "wt", encoding="utf-8") as file:
-                    file.write(self.serialize())
+                with open(self.path, "wb") as file:
+                    file.write(self._encrypt(self.serialize()))
             except Exception as e:
                 self._logger.error("Failed to write token cache")
                 self._logger.exception(e)
@@ -359,8 +368,9 @@ class PersistentTokenStore(SerializableTokenCache):
     def load(self) -> None:
         if os.path.exists(self.path):
             try:
-                with open(self.path, encoding="utf-8") as file:
-                    self.deserialize(file.read())
+                with open(self.path, mode="rb") as file:
+                    content = file.read()
+                    self.deserialize(self._decrypt(content))
             except Exception as e:
                 self._logger.error("Failed to read token cache")
                 self._logger.exception(e)
@@ -374,3 +384,27 @@ class PersistentTokenStore(SerializableTokenCache):
     def modify(self, credential_type, old_entry, new_key_value_pairs=None):
         super().modify(credential_type, old_entry, new_key_value_pairs)
         self.save()
+
+    def _get_encryption_key(self) -> bytes:
+        key = hashlib.md5(self.secret_key.encode()).hexdigest()
+        return base64.urlsafe_b64encode(key.encode("utf-8"))
+
+    def _encrypt(self, data: str) -> bytes:
+        data = data.encode("utf-8")
+
+        if not ENCRYPT_CACHE:
+            return data
+
+        f = Fernet(self._get_encryption_key())
+        return f.encrypt(data)
+
+    def _decrypt(self, data: bytes) -> str:
+        if not isinstance(data, bytes):
+            raise TypeError("data must be bytes")
+
+        try:
+            f = Fernet(self._get_encryption_key())
+            return f.decrypt(data).decode("utf-8")
+        except InvalidToken:
+            self._logger.debug("Failed to decrypt token cache")
+            return "{}"

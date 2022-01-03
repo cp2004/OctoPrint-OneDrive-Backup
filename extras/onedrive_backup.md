@@ -3,100 +3,94 @@ layout: plugin
 
 id: onedrive_backup
 title: OneDrive Backup
-description: Automatically upload backups to Microsoft OneDrive
+description: Automatically upload OctoPrint backups to Microsoft OneDrive
 authors:
 - Charlie Powell
 license: AGPLv3
 
-# TODO
-date: today's date in format YYYY-MM-DD, e.g. 2015-04-21
+date: 2022-01-03
 
-homepage: https://github.com/cp2004/OneDrive-Backup
-source: https://github.com/cp2004/OneDrive-Backup
+homepage: https://github.com/cp2004/OctoPrint-OneDrive-Backup
+source: https://github.com/cp2004/OctoPrint-OneDrive-Backup
 archive: https://github.com/cp2004/OctoPrint-OneDrive-Backup/releases/download/latest/release.zip
 
-# TODO
-# Set this to true if your plugin uses the dependency_links setup parameter to include
-# library versions not yet published on PyPi. SHOULD ONLY BE USED IF THERE IS NO OTHER OPTION!
-#follow_dependency_links: false
-
-# TODO
 tags:
-- a list
-- of tags
-- that apply
-- to your plugin
-- (take a look at the existing plugins for what makes sense here)
+- onedrive
+- backup
+- cloud
+- microsoft
 
-# TODO
-screenshots:
-- url: url of a screenshot, /assets/img/...
-  alt: alt-text of a screenshot
-  caption: caption of a screenshot
-- url: url of another screenshot, /assets/img/...
-  alt: alt-text of another screenshot
-  caption: caption of another screenshot
-- ...
+# screenshots:     - they are all embedded in the config guide below.
+# - url: url of a screenshot, /assets/img/...
+#   alt: alt-text of a screenshot
+#   caption: caption of a screenshot
 
-# TODO
-featuredimage: url of a featured image for your plugin, /assets/img/...
-
-# TODO
-# You only need the following if your plugin requires specific OctoPrint versions or
-# specific operating systems to function - you can safely remove the whole
-# "compatibility" block if this is not the case.
+featuredimage: /assets/img/plugins/onedrive_backup/config-3.png
 
 compatibility:
-
-  # List of compatible versions
-  #
-  # A single version number will be interpretated as a minimum version requirement,
-  # e.g. "1.3.1" will show the plugin as compatible to OctoPrint versions 1.3.1 and up.
-  # More sophisticated version requirements can be modelled too by using PEP440
-  # compatible version specifiers.
-  #
-  # You can also remove the whole "octoprint" block. Removing it will default to all
-  # OctoPrint versions being supported.
-
   octoprint:
-  - 1.2.0
+  - 1.5.0
 
-  # List of compatible operating systems
-  #
-  # Valid values:
-  #
-  # - windows
-  # - linux
-  # - macos
-  # - freebsd
-  #
-  # There are also two OS groups defined that get expanded on usage:
-  #
-  # - posix: linux, macos and freebsd
-  # - nix: linux and freebsd
-  #
-  # You can also remove the whole "os" block. Removing it will default to all
-  # operating systems being supported.
+  # Every OS should work
 
-  os:
-  - linux
-  - windows
-  - macos
-  - freebsd
-
-  # Compatible Python version
-  #
-  # Plugins should aim for compatibility for Python 2 and 3 for now, in which case the value should be ">=2.7,<4".
-  #
-  # Plugins that only wish to support Python 3 should set it to ">=3,<4".
-  #
-  # If your plugin only supports Python 2 (worst case, not recommended for newly developed plugins since Python 2
-  # is EOL), leave at ">=2.7,<3" - be aware that your plugin will not be allowed to register on the
-  # plugin repository if it only support Python 2.
-
-  python: ">=2.7,<3"
+  python: ">=3.7,<4"
 
 ---
 
-**TODO**: Longer description of your plugin, configuration examples etc. This part will be visible on the page at
-http://plugins.octoprint.org/plugin/onedrive_backup/
+# OneDrive Backup Plugin
+
+Automatically upload OctoPrint backups to OneDrive when they are created.
+
+## Installation
+
+Install the plugin via the bundled Plugin Manager or manually using this URL:
+```
+https://github.com/cp2004/OctoPrint-OneDrive-Backup/releases/download/latest/release.zip
+```
+
+**Warning**: This plugin requires Python 3.7 or newer to install. To find out more about upgrading your OctoPrint install
+to use Python 3, you can take a look at [this post](https://community.octoprint.org/t/upgrading-your-octoprint-install-to-python-3/35158)
+
+## Configuration
+
+Once the plugin is installed and loaded, you can set it up to connect to your Microsoft account.
+
+### Adding your account
+
+![Add account](/assets/img/plugins/onedrive_backup/config-1.png)
+
+Select 'Add account' to generate a login code. Head to the URL linked to login with your account, entering the code
+generated and logging in with your Microsoft account. Grant OctoPrint OneDrive Backup access to your files.
+
+Once this is done, return the plugin, and it should show your account name & a success message.
+
+![Login done](/assets/img/plugins/onedrive_backup/config-2.png)
+
+### Configuring the backup upload
+
+![Select Folder](/assets/img/plugins/onedrive_backup/config-3.png)
+
+You can then configure the folder to save backups to. Select 'Change Folder' and then you should be able to navigate
+through your OneDrive folders to find somewhere for backups to be saved.
+
+![Backup upload progress](/assets/img/plugins/onedrive_backup/config-4.png)
+
+Maybe give it a test after configuring it - head to the backup & restore tab and create a backup. Upload progress will
+be shown in a notification in the UI.
+
+## Supporting Development
+
+I work on OctoPrint, OctoPrint plugins and help support the community in my spare time. It takes a lot of work, so if
+you are interested you can support me through [GitHub Sponsors](https://github.com/sponsors/cp2004). You can contribute monthly or one time for
+any amount, you choose!
+
+## Important Security Notice
+
+Please be aware that this plugin stores its tokens for accessing your Microsoft account in OctoPrint's
+configuration folder, as expected. As a result, if your OctoPrint install (or the server it is running on) is
+compromised, your files in OneDrive are at risk.
+
+**It is not recommended to install this plugin on OctoPrint installs accessible directly from the
+internet, or multi-user installs where you may not trust every user.**
+
+The author of this plugin is not responsible for any damage caused as a result of using this plugin.

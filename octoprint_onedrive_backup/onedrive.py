@@ -406,5 +406,5 @@ class PersistentTokenStore(SerializableTokenCache):
             f = Fernet(self._get_encryption_key())
             return f.decrypt(data).decode("utf-8")
         except InvalidToken:
-            self._logger.debug("Failed to decrypt token cache")
+            self._logger.error("Failed to decrypt token cache")
             return "{}"

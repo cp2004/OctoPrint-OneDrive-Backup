@@ -15,7 +15,8 @@ GRAPH_URL = "https://graph.microsoft.com/v1.0"
 
 # WHEN CHANGING SCOPES we will need to think of a way to re-auth, hopefully this isn't needed...
 SCOPES = [
-    "User.ReadBasic.All",
+    # "User.ReadBasic.All",  Seemed to cause issues looking up the AT from cache.
+    # See https://github.com/AzureAD/microsoft-authentication-library-for-python/issues/450
     "Files.ReadWrite",
 ]
 REQUEST_TIMEOUT = 5  # Seconds

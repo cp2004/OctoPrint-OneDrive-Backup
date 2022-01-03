@@ -17,3 +17,11 @@ You can either start the frontend in development mode, or build for production i
 `npm run release` - production mode.
 
 That should be it :)
+
+## Contributing documentation
+
+Extra guides, clarification etc. are always welcome :)
+
+Opening issues to let me know of things that you don't understand helps as well.
+
+Please don't open PRs fixing single typos. It gets me excited for a contribution but then disappointed.

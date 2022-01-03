@@ -1,0 +1,41 @@
+name: Bug Report
+description: Found something wrong? Report it!
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: Reporting an issue is easy! Please fill out as much of the information below as possible, to make your experience easier.
+  - type: textarea
+    attributes:
+      label: Description of the bug
+      description: Please provide a brief description of what you think went wrong
+      placeholder: It broke when I did...
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Make sure you are up-to-date on the latest versions of all software involved.
+        **What versions are you running?**
+  - type: input
+    attributes:
+      label: Plugin version
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: OctoPrint version
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## Log files
+        Systeminfo bundles are fine, as are just single `octoprint.log` files. I don't mind either. But please include
+        one or the other - this plugin has quite detailed logging if it encounters an error.
+  - type: textarea
+    attributes:
+      label: OctoPrint logs
+      description: Please upload the entire file here.
+    validations:
+      required: true

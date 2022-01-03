@@ -279,10 +279,12 @@ class OneDriveComm:
         timeout=REQUEST_TIMEOUT,
         headers=None,
     ) -> dict:
-        if not endpoint[:1] == "/":
-            endpoint = f"/{endpoint}"
-
-        url = f"{GRAPH_URL}{endpoint}"
+        if endpoint.startswith("https"):
+            url = endpoint
+        else:
+            if not endpoint[:1] == "/":
+                endpoint = f"/{endpoint}"
+            url = f"{GRAPH_URL}{endpoint}"
 
         select = {"$select": select} if select is not None else None
 

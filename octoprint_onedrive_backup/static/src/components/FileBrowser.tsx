@@ -28,7 +28,6 @@ export default function FileBrowser () {
         }
     )
 
-    // TODO - make sure no duplicate network requests, with the auth component
     const {data: configData, isLoading: configDataLoading, refetch: refetchConfig} = useQuery(
         "accounts",
         () => {
@@ -84,50 +83,57 @@ export default function FileBrowser () {
             {
                 configDataLoading
                     ? <span><i className={"fas fa-spin fa-spinner"} /> Loading...</span>
-                    : <span>Currently configured upload destination: {configData?.folder.path ? <code>{configData.folder.path}</code> : "None"}</span>
+                    : (
+                        <span>Currently configured upload destination: {configData?.folder.path ? <code>{configData.folder.path}</code> : "None"}</span>
+                    )
             }
+            <div className={"row-fluid"}>
+                {configData?.folder.path && (
+                    <button className={"btn btn-primary"} style={{marginRight: "5px"}} onClick={() => handleActivateFolder({id: "", path: ""})}>
+                        <i className={"fa-fw " + (loading ? "fas fa-spin fa-spinner" : "fas fa-times")}/> Clear folder
+                    </button>
+                )}
+                {!active && (
+                    <button className={"btn btn-primary"} onClick={() => setActive(true)}>
+                        <i className={"fa-fw " + (isLoading ? "fas fa-spin fa-spinner" : "far fa-folder-open")}/> Change folder
+                    </button>
+                )}
+            </div>
             {hasError &&
             <Alert variant={"error"}>
                 <i className={"fas fa-times text-error"} /><strong> Error:</strong>
                 {typeof data.error === "string" ? data.error : "Unknown error. Check octoprint.log for details."}
             </Alert>}
-            {active
-                ? (
-                    <table className={"table"}>
-                    <thead>
-                        <tr>
-                            <th>Folder name {loading && <i className={"fas fa-spin fa-spinner"} />} </th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {historyPos > 0 &&
-                        <tr>
-                            <td>
-                                <span onClick={handleBack} style={{ cursor: "pointer" }}><i className={"fas fa-arrow-left"} /> Back</span>
-                            </td>
-                            <td/>
-                        </tr>}
-                        {files.length ? files : (
-                            <>
-                                {!isLoading && !hasError && (
-                                    <tr>
-                                        <td>
-                                            <i className={"fas fa-times"} /> No sub-folders found
-                                        </td>
-                                    </tr>
-                                )}
-                            </>
-                        )}
-                    </tbody>
-                    </table>
-                ) :
-                <div className={"row-fluid"}>
-                    <button className={"btn btn-primary"} onClick={() => setActive(true)}>
-                        <i className={"fa-fw " + (isLoading ? "fas fa-spin fa-spinner" : "far fa-folder-open")}/> Change folder
-                    </button>
-                </div>
-            }
+            {active && (
+                <table className={"table"}>
+                <thead>
+                    <tr>
+                        <th>Folder name {loading && <i className={"fas fa-spin fa-spinner"} />} </th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {historyPos > 0 &&
+                    <tr>
+                        <td>
+                            <span onClick={handleBack} style={{ cursor: "pointer" }}><i className={"fas fa-arrow-left"} /> Back</span>
+                        </td>
+                        <td/>
+                    </tr>}
+                    {files.length ? files : (
+                        <>
+                            {!isLoading && !hasError && (
+                                <tr>
+                                    <td>
+                                        <i className={"fas fa-times"} /> No sub-folders found
+                                    </td>
+                                </tr>
+                            )}
+                        </>
+                    )}
+                </tbody>
+                </table>
+            )}
         </>
     )
 }

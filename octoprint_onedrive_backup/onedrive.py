@@ -1,5 +1,4 @@
 import base64
-import hashlib
 import logging
 import os
 import threading
@@ -388,8 +387,7 @@ class PersistentTokenStore(SerializableTokenCache):
         self.save()
 
     def _get_encryption_key(self) -> bytes:
-        key = hashlib.md5(self.secret_key.encode()).hexdigest()
-        return base64.urlsafe_b64encode(key.encode("utf-8"))
+        return base64.urlsafe_b64encode(self.secret_key.encode("utf-8"))
 
     def _encrypt(self, data: str) -> bytes:
         data = data.encode("utf-8")

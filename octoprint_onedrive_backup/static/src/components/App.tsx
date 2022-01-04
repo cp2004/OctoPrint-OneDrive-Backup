@@ -99,7 +99,7 @@ function App () {
             }
             new Pnotify({
                 title: "Upload error",
-                text: `There was an error uploading your backup. Please check the <code>octoprint.log</code> for details. <br> <pre>${lodash.escape(message.data.data.content.error)}</pre>`,
+                text: `There was an error uploading your backup. Please check the <code>octoprint.log</code> for details. <br> <pre>${lodash.escape(JSON.stringify(message.data.data.content.error))}</pre>`,
                 type: "error",
                 hide: false,
             })
@@ -108,7 +108,7 @@ function App () {
 
     return (
         <>
-            <h5>OneDrive Backup Plugin</h5>
+            <h5>OneDrive Backup Configuration</h5>
 
             <Auth />
 

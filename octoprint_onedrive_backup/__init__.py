@@ -99,7 +99,7 @@ class OneDriveBackupPlugin(
                     }
                 ],
                 "current": self._plugin_version,
-                "pip": "https://github.com/cp2004/OctoPrint-OneDrive-Backup/archive/{target_version}.zip",
+                "pip": "https://github.com/cp2004/OctoPrint-OneDrive-Backup/releases/download/{target_version}/release.zip",
             }
         }
 

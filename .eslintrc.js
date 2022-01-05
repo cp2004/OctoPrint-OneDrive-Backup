@@ -3,7 +3,7 @@ module.exports = {
     browser: true,
     es2021: true
   },
-  extends: ["standard", "plugin:react/recommended", "plugin:react-hooks/recommended"],
+  extends: ["react-app"],
   parserOptions: {
     ecmaVersion: 12,
     sourceType: "module"

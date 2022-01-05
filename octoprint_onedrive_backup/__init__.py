@@ -86,6 +86,18 @@ class OneDriveBackupPlugin(
                 "type": "github_release",
                 "user": "cp2004",
                 "repo": "OctoPrint-OneDrive-Backup",
+                "stable_branch": {
+                    "name": "Stable",
+                    "branch": "main",
+                    "comittish": ["main"],
+                },
+                "prerelease_branches": [
+                    {
+                        "name": "Release Candidate",
+                        "branch": "pre-release",
+                        "comittish": ["pre-release", "main"],
+                    }
+                ],
                 "current": self._plugin_version,
                 "pip": "https://github.com/cp2004/OctoPrint-OneDrive-Backup/archive/{target_version}.zip",
             }

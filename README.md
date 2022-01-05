@@ -6,7 +6,7 @@ Automatically upload OctoPrint backups to OneDrive when they are created.
 
 Install the plugin via the bundled Plugin Manager or manually using this URL:
 ```
-https://github.com/cp2004/OctoPrint-OneDrive-Backup/releases/download/latest/release.zip
+https://github.com/cp2004/OctoPrint-OneDrive-Backup/releases/latest/download/release.zip
 ```
 
 **Warning**: This plugin requires Python 3.7 or newer to install. To find out more about upgrading your OctoPrint install

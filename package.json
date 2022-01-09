@@ -3,12 +3,10 @@
   "version": "1.0.0",
   "description": "Automatically upload OctoPrint Backups to OneDrive",
   "scripts": {
-    "start": "concurrently \"npm run dev\" \"npm run css-dev\"",
-    "build": "webpack --mode=production",
-    "dev": "webpack --mode=development --watch",
-    "css-dev": "sass --watch octoprint_onedrive_backup/static/src/onedrive.scss octoprint_onedrive_backup/static/dist/onedrive_backup.css",
-    "css-build": "sass --style=compressed --no-source-map octoprint_onedrive_backup/static/src/onedrive.scss octoprint_onedrive_backup/static/dist/onedrive_backup.css",
-    "release": "concurrently \"npm run build\" \"npm run css-build\""
+    "start": "npm run esbuild-dev",
+    "release": "npm run esbuild",
+    "esbuild": "esbuild ./octoprint_onedrive_backup/static/src/onedrive.tsx --loader:.js=jsx --bundle --minify --sourcemap --target=\"chrome92,edge96,firefox94,ios12.2,safari13.1\" --outfile=./octoprint_onedrive_backup/static/dist/onedrive_backup_es.js",
+    "esbuild-dev": "esbuild ./octoprint_onedrive_backup/static/src/onedrive.tsx --loader:.js=jsx --bundle --watch --target=\"chrome96,firefox95,safari15.2\" --outfile=./octoprint_onedrive_backup/static/dist/onedrive_backup_es.js"
   },
   "repository": {
     "type": "git",
@@ -25,20 +23,12 @@
   },
   "homepage": "https://github.com/cp2004/OctoPrint-OneDrive-Backup#readme",
   "devDependencies": {
-    "@babel/core": "^7.16.7",
-    "@babel/preset-env": "^7.16.7",
-    "@babel/preset-react": "^7.16.7",
-    "@babel/preset-typescript": "^7.16.7",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
-    "babel-loader": "^8.2.3",
     "concurrently": "^7.0.0",
+    "esbuild": "^0.14.11",
     "eslint": "^8.6.0",
-    "eslint-config-react-app": "7.0.0",
-    "sass": "^1.45.2",
-    "ts-loader": "9.2.6",
-    "webpack": "^5.65.0",
-    "webpack-cli": "^4.9.1"
+    "eslint-config-react-app": "7.0.0"
   },
   "browserslist": {
     "production": [

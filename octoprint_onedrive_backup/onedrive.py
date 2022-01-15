@@ -91,7 +91,7 @@ class OneDriveComm:
             location = f"items/{item_id}"
 
         folders = []
-        data = self._graph_request(f"/me/drive/{location}/children", select="")
+        data = self._graph_request(f"/me/drive/{location}/children")
         if "error" in data:
             return {"error": data["error"]}  # No extra fields slipping in
 

@@ -4,7 +4,7 @@ import ErrorBoundary from "./ErrorBoundary"
 import FileBrowser from "./FileBrowser"
 import Footer from "./Footer"
 import {QueryClient, QueryClientProvider} from "react-query";
-import { ReactQueryDevtools } from 'react-query/devtools'
+import { ReactQueryDevtools } from "react-query/devtools"
 import Auth from "./Auth";
 import useSocket from "../hooks/useSocket";
 import SecurityWarning from "./Security";
@@ -42,7 +42,7 @@ function OnError () {
             </h2>
             <p>
                 {"Please "}
-                <a href={"https://github.com/cp2004/OctoPrint-NextGen-UI/issues/new/choose"} target={"_blank"}>
+                <a href={"https://github.com/cp2004/OctoPrint-NextGen-UI/issues/new/choose"} target={"_blank"} rel="noreferrer">
                     report this error
                 </a>
                 , including the full JavaScript console contents in the report.
@@ -63,7 +63,7 @@ function App () {
         }
 
         const type = message.data.data.type
-        if (type == "upload_progress") {
+        if (type === "upload_progress") {
             const progress = message.data.data.content.progress
 
             if (progressNotification && progressNotification.state === "open"){

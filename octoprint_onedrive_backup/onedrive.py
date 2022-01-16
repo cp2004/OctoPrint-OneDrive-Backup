@@ -67,10 +67,15 @@ class OneDriveComm:
             raise AuthInProgressError("Auth flow is already in progress")
 
     def acquire_token(self, flow: dict) -> None:
-        self.client.acquire_token_by_device_flow(flow)
+        response = self.client.acquire_token_by_device_flow(flow)
+        if "access_token" in response:
+            # Flow was successful
+            self.plugin.send_message("auth_done", {})
+            self.flow_in_progress = None
+        else:
+            self.plugin.send_message("auth_failed", {})
+
         self.cache.save()
-        self.plugin.send_message("auth_done", {})
-        self.flow_in_progress = None
 
     def list_accounts(self):
         return [account["username"] for account in self.client.get_accounts()]

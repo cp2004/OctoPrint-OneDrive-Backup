@@ -1,7 +1,7 @@
 import * as React from "react"
 import {useQuery} from "react-query";
 import useSocket from "../hooks/useSocket";
-import copy from 'copy-to-clipboard'
+import copy from "copy-to-clipboard"
 
 // @ts-ignore:next-line
 const OctoPrint = window.OctoPrint
@@ -27,7 +27,7 @@ interface AuthProps {
 }
 
 export default function Auth () {
-    const [authSuccess, setAuthSuccess] = React.useState<boolean>(false)
+    const [authStatus, setAuthStatus] = React.useState<"success" | "failed" | null>(null)
     const [authLoading, setAuthLoading] = React.useState<boolean>(false)
 
     const {data, isLoading, error, refetch} = useQuery(
@@ -49,9 +49,12 @@ export default function Auth () {
         if (plugin === "onedrive_backup") {
             const type = message.data.data.type
             if (type === "auth_done") {
-                setAuthSuccess(true)
+                setAuthStatus("success")
                 // Rerun query to make new data show up
                 refetch()
+            }
+            if (type === "auth_failed") {
+                setAuthStatus("failed")
             }
         }
     })
@@ -75,6 +78,8 @@ export default function Auth () {
 
     const loading = isLoading || authLoading
 
+    const codeExpired = data?.flow?.expires_at * 1000 < Date.now()
+
     return (
         <>
             {hasAccount
@@ -89,8 +94,11 @@ export default function Auth () {
 
             <div>
                 <button className={"btn btn-success"} onClick={addAccount}>
-                    <i className={"fas fa-fw " + (loading ? "fa-spin fa-spinner" : hasAccount ? "fa-user-edit" : "fa-user-plus" )} />
-                    {" "}{hasAccount ? "Change Account" : "Add account"}
+                    <i
+                        className={
+                            "fas fa-fw " +
+                            (loading ? "fa-spin fa-spinner" : (hasAccount ? "fa-user-edit" : (codeExpired ? "fa-redo" : "fa-user-plus")))} />
+                    {" "}{hasAccount ? "Change Account" : (codeExpired ? "Regenerate code" : "Add account")}
                 </button>
                 {hasAccount &&
                 <button className={"btn btn-danger"} style={{marginLeft: "5px"}} onClick={forgetAccount}>
@@ -110,18 +118,25 @@ export default function Auth () {
                         <i className={"fas fa-fw fa-copy"} />
                         {" "}Copy code
                     </button>
+                    {" "}<i className="fas fa-clock" />{" Code expires at " + new Date(data.flow.expires_at * 1000).toLocaleTimeString()}
                 </p>
             </div>
             }
 
-            {authSuccess && <div className={"alert alert-success"} style={{marginTop: "5px"}}>
+            {authStatus === "success" && <div className={"alert alert-success"} style={{marginTop: "5px"}}>
                 <p>
                     <strong>Success! </strong>
                     Your account has been successfully added to the plugin.
                     Make sure to configure the path to upload your backups to below.
                 </p>
-            </div>
-            }
+            </div>}
+            {authStatus === "failed" && <div className={"alert alert-error"} style={{marginTop: "5px"}}>
+                <p>
+                    <strong>Error! </strong>
+                    There was an error adding your account.
+                    Please try again.
+                </p>
+            </div>}
         </>
     )
 }

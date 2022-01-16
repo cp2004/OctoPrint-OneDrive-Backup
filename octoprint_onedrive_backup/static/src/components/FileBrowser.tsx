@@ -20,7 +20,7 @@ export default function FileBrowser () {
         }
     }
 
-    const {data, isLoading, error: queryError} = useQuery(
+    const {data, isLoading, error: folderQueryError, refetch: refetchFolders} = useQuery(
         ["folders", currentFolder],
         () => fetchFiles(currentFolder),
         {
@@ -75,7 +75,7 @@ export default function FileBrowser () {
         </tr>
     )) : []
 
-    const hasError = queryError || data?.error
+    const hasError = folderQueryError || data?.error
     const loading = isLoading || configDataLoading
 
     return (
@@ -96,6 +96,11 @@ export default function FileBrowser () {
                 {!active && (
                     <button className={"btn btn-primary"} onClick={() => setActive(true)}>
                         <i className={"fa-fw " + (isLoading ? "fas fa-spin fa-spinner" : "far fa-folder-open")}/> Change folder
+                    </button>
+                )}
+                {active && (
+                    <button className={"btn btn-primary"} onClick={() => refetchFolders()}>
+                        <i className={"fa-fw fas fa-sync" + (isLoading ? "fa-spin" : "")}/> {hasError ? "Retry" : "Refresh"}
                     </button>
                 )}
             </div>

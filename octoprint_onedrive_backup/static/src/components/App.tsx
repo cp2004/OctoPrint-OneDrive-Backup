@@ -66,9 +66,9 @@ function App () {
         if (type === "upload_progress") {
             const progress = message.data.data.content.progress
 
-            if (progressNotification && progressNotification.state === "open"){
+            if (progressNotification){
                 progressNotification.update({
-                    text: `${progress}% complete`
+                    text: `Upload ${progress}% complete...`
                 })
             } else {
                 const notify = new Pnotify({

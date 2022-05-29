@@ -59,6 +59,7 @@ Please see the [contributing guidelines](CONTRIBUTING.md) for more information.
 
 ## Sponsors
 
+* [SimplyPrint](https://simplyprint.io/)
 * [@iFrostizz](https://github.com/iFrostizz)
 * [@KenLucke](https://github.com/KenLucke)
 

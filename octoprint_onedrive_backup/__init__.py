@@ -1,10 +1,20 @@
 import threading
+import os
 from typing import Optional
 
 import octoprint.plugin
 
 from .api import Commands, OneDriveBackupApi
-from .onedrive import OneDriveComm
+from octo_onedrive import OneDriveComm
+
+APPLICATION_ID = "1fbab959-f7f1-43c4-a800-5f7f58eb068f"  # Not a secret :)
+
+# WHEN CHANGING SCOPES we will need to think of a way to re-auth, hopefully this isn't needed...
+SCOPES = [
+    # "User.ReadBasic.All",  Seemed to cause issues looking up the AT from cache.
+    # See https://github.com/AzureAD/microsoft-authentication-library-for-python/issues/450
+    "Files.ReadWrite",
+]
 
 
 class OneDriveBackupPlugin(
@@ -21,7 +31,14 @@ class OneDriveBackupPlugin(
 
     def initialize(self):
         self.api = OneDriveBackupApi(self)
-        self.onedrive = OneDriveComm(self)
+
+        self.onedrive = OneDriveComm(
+            app_id=APPLICATION_ID,
+            scopes=SCOPES,
+            token_cache_path=os.path.join(self.get_plugin_data_folder(), "cache.bin"),
+            encryption_key=self._settings.global_get(["server", "secretKey"]),
+            logger="octoprint.plugins.onedrive_backup.OneDriveComm"
+        )
 
     # SimpleApiPlugin
     def on_api_get(self, request):
@@ -40,18 +57,22 @@ class OneDriveBackupPlugin(
 
     def on_event(self, event, payload):
         if event == "plugin_backup_backup_created":
-            t = threading.Thread(
-                target=self.onedrive.upload_file,
-                args=(
-                    payload["name"],
-                    payload["path"],
-                    self.on_upload_progress,
-                    self.on_upload_complete,
-                    self.on_upload_error,
-                ),
-            )
-            t.daemon = True
-            t.start()
+            # Check if a folder has been configured
+            folder_id = self._settings.get(["folder", "id"])
+            if folder_id:
+                t = threading.Thread(
+                    target=self.onedrive.upload_file,
+                    kwargs={
+                        "file_name": payload["name"],
+                        "file_path": payload["path"],
+                        "upload_location_id": folder_id,
+                        "on_upload_progress": self.on_upload_progress,
+                        "on_upload_complete": self.on_upload_complete,
+                        "on_upload_error": self.on_upload_error,
+                    },
+                )
+                t.daemon = True
+                t.start()
 
     def on_upload_progress(self, progress):
         # Called by the onedrive client for every chunk uploaded

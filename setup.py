@@ -44,10 +44,7 @@ plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = [
-    "msal>=1.16.0, <2.0.0",
-    "cryptography<=36.0.0",  # https://www.piwheels.org/project/cryptography/ wheel was built for 36.0.0, but not 36.0.1
-    # Should be able to remove this bound when the build issue is fixed.
-    # See https://github.com/piwheels/packages/issues/264 for updates.
+    "octo-onedrive==0.0.2"  # My own package, for common code between the two onedrive plugins
 ]
 
 ### --------------------------------------------------------------------------------------------------------------------
@@ -74,7 +71,7 @@ plugin_ignored_packages = []
 # Example:
 #     plugin_requires = ["someDependency==dev"]
 #     additional_setup_parameters = {"dependency_links": ["https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-additional_setup_parameters = {"python_requires": ">3.6"}
+additional_setup_parameters = {"python_requires": ">=3.7"}
 
 ########################################################################################################################
 

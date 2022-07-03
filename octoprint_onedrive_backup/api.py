@@ -1,6 +1,6 @@
 import logging
 
-from octoprint_onedrive_backup import onedrive
+from octo_onedrive.onedrive import AuthInProgressError
 
 
 class Commands:
@@ -35,11 +35,17 @@ class OneDriveBackupApi:
 
     def on_api_command(self, command, data):
         if command == Commands.StartAuth:
+            def on_success(response):
+                self.plugin.send_message("auth_done", {})
+
+            def on_error(response):
+                self.plugin.send_message("auth_failed", {})
+
             try:
-                flow = self.plugin.onedrive.begin_auth_flow()
+                flow = self.plugin.onedrive.begin_auth_flow(on_success, on_error)
                 url = flow["verification_uri"]
                 code = flow["user_code"]
-            except onedrive.AuthInProgressError:
+            except AuthInProgressError:
                 if self.plugin.onedrive.flow_in_progress:
                     url = (self.plugin.onedrive.flow_in_progress["verification_uri"],)
                     code = self.plugin.onedrive.flow_in_progress["user_code"]

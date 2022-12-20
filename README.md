@@ -59,9 +59,9 @@ Please see the [contributing guidelines](CONTRIBUTING.md) for more information.
 
 ## Sponsors
 
-* [SimplyPrint](https://simplyprint.io/)
-* [@iFrostizz](https://github.com/iFrostizz)
 * [@KenLucke](https://github.com/KenLucke)
+* [@iFrostizz](https://github.com/iFrostizz)
+* [@CmdrCody51](https://github.com/CmdrCody51)
 
 As well as 5 others supporting me regularly through [GitHub Sponsors](https://github.com/sponsors/cp2004)!
 

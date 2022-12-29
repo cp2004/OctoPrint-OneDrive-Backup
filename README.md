@@ -59,13 +59,14 @@ Please see the [contributing guidelines](CONTRIBUTING.md) for more information.
 
 ## Sponsors
 
-* [@KenLucke](https://github.com/KenLucke)
-* [@iFrostizz](https://github.com/iFrostizz)
-* [@CmdrCody51](https://github.com/CmdrCody51)
+- [@KenLucke](https://github.com/KenLucke)
+- [@iFrostizz](https://github.com/iFrostizz)
+- [@CmdrCody51](https://github.com/CmdrCody51)
 
 As well as 5 others supporting me regularly through [GitHub Sponsors](https://github.com/sponsors/cp2004)!
 
 ## Supporting my efforts
 
 I created this project in my spare time, so if you have found it useful or enjoyed using it then please consider [supporting it's development!](https://github.com/sponsors/cp2004). You can sponsor monthly or one time, for any amount you choose.
+
 ## ☁️
